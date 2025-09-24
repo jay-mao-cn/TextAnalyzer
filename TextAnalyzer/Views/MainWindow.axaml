@@ -1,0 +1,471 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TextAnalyzer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:cvt="using:TextAnalyzer.Converters"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="TextAnalyzer.Views.MainWindow"
+        x:DataType="vm:MainWindowVM"
+        Icon="/Assets/TextAnalyzer.ico" WindowState="Maximized"
+        DragDrop.AllowDrop="True"
+        Title="{Binding AppTitle}" FontSize="12"
+        FontFamily="Verdana">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext
+             property in code (look at App.axaml.cs) -->
+        <vm:MainWindowVM/>
+    </Design.DataContext>
+
+    <Window.Resources>
+        <DataTemplate x:Key="RecentItemTemplate" x:DataType="vm:RecentItemVM">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Background="AliceBlue"
+                        HorizontalContentAlignment="Center" Padding="2,0"
+                        Content="X" Foreground="Red" Margin="5,0,-30,0"
+                        Command="{Binding RemoveItem}"/>
+                <TextBlock VerticalAlignment="Center"
+                           Text="{Binding Name}" ToolTip.Tip="{Binding Name}"
+                           TextTrimming="PrefixCharacterEllipsis"/>
+            </DockPanel>
+        </DataTemplate>
+
+        <cvt:EqualityConverter x:Key="EqualityCvt"/>
+        <cvt:EncodingSelectionConverter x:Key="EncodingCvt"/>
+        <x:Boolean x:Key="TrueValue">True</x:Boolean>
+        <x:Boolean x:Key="FalseValue">False</x:Boolean>
+    </Window.Resources>
+
+    <!--For Mac OS-->
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="File">
+                <NativeMenu>
+                    <NativeMenuItem Header="Open" Gesture="Meta+O"
+                                    Command="{Binding OpenTextFile}"/>
+                    <NativeMenuItem Header="Reload" Gesture="F5"
+                                    Command="{Binding ReloadTextFileCommand}"/>
+                    <NativeMenuItem Header="Save Current Lines..." Gesture="Meta+Shift+S"
+                                    Command="{Binding SaveCurrentLinesCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Load Filters..."
+                                    Command="{Binding LoadFilters}"/>
+                    <NativeMenuItem Header="Save Filters..."
+                                    Command="{Binding SaveFiltersCommand}"
+                                    Gesture="Meta+S"/>
+                    <NativeMenuItem Header="Save Filters As..."
+                                    Command="{Binding SaveFiltersAsCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Recent Files">
+                        <NativeMenu/>
+                    </NativeMenuItem>
+                    <NativeMenuItem Header="Recent Filters">
+                        <NativeMenu/>
+                    </NativeMenuItem>
+                </NativeMenu>
+            </NativeMenuItem>
+
+            <NativeMenuItem Header="Edit">
+                <NativeMenu>
+                    <NativeMenuItem Header="Copy" Command="{Binding CopyCommand}" Gesture="Meta+C"
+                                    ToolTip="Can copy texts or filters depending on current focused area"/>
+                    <NativeMenuItem Header="Copy With Lines" Gesture="Meta+Shift+C"
+                                    Command="{Binding CopyWithLinesCommand}"/>
+                    <NativeMenuItem Header="Paste" Command="{Binding PasteCommand}" Gesture="Meta+V"
+                                    ToolTip="Can paste texts or filters depending on current focused area"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Copy Filters"
+                                    Command="{Binding CopyFiltersCommand}"/>
+                    <NativeMenuItem Header="Paste Filters"
+                                    Command="{Binding PasteFiltersCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Select All" Gesture="Meta+A"
+                                    Command="{Binding SelectAllTextsCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Go To..." Gesture="Ctrl+G"
+                                    Command="{Binding GoToLineCommand}"/>
+                </NativeMenu>
+            </NativeMenuItem>
+
+            <NativeMenuItem Header="View">
+                <NativeMenu>
+                    <NativeMenuItem Header="Show Only Filtered Lines"
+                                    Command="{Binding ToggleShowOnlyFilteredLines}"
+                                    ToggleType="CheckBox" Gesture="Ctrl+H"
+                                    IsChecked="{Binding IsShowOnlyFilteredLines}"/>
+                    <NativeMenuItem Header="Hide Empty Lines" ToggleType="CheckBox"
+                                    Command="{Binding ToggleHideEmptyLines}"
+                                    IsChecked="{Binding IsHideEmptyLines}"/>
+
+                    <NativeMenuItem Header="Show Markers">
+                        <NativeMenu>
+                            <NativeMenuItem Header="Always" ToggleType="Radio"
+                                            Command="{Binding ShowMarkers}"
+                                            CommandParameter="{StaticResource TrueValue}"
+                                            IsChecked="{Binding IsShowMarkers,Converter={StaticResource EqualityCvt},ConverterParameter={StaticResource TrueValue}}"/>
+
+                            <NativeMenuItem Header="Never" ToggleType="Radio"
+                                            Command="{Binding ShowMarkers}"
+                                            CommandParameter="{StaticResource FalseValue}"
+                                            IsChecked="{Binding IsShowMarkers,Converter={StaticResource EqualityCvt},ConverterParameter={StaticResource FalseValue}}"/>
+
+                            <NativeMenuItem Header="Only When In Use" ToggleType="Radio"
+                                            Command="{Binding ShowMarkers}"
+                                            CommandParameter="{x:Null}"
+                                            IsChecked="{Binding IsShowMarkers,Converter={StaticResource EqualityCvt},ConverterParameter={x:Null}}"/>
+                        </NativeMenu>
+                    </NativeMenuItem>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Zoom In" Gesture="Ctrl++"
+                                    Command="{Binding ZoomInCommand}"/>
+                    <NativeMenuItem Header="Zoom Out" Gesture="Ctrl+-"
+                                    Command="{Binding ZoomOutCommand}"/>
+                    <NativeMenuItem Header="Reset Zoom" Gesture="Ctrl+D0"
+                                    Command="{Binding ResetZoom}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Encoding">
+                        <NativeMenu>
+                            <NativeMenuItem Header="System Default" ToggleType="Radio"
+                                            Command="{Binding UpdateEncoding}"
+                                            CommandParameter="Default"
+                                            IsChecked="{Binding TextEncoding,Converter={StaticResource EncodingCvt},ConverterParameter=Default}"/>
+
+                            <NativeMenuItem Header="UTF-8" ToggleType="Radio"
+                                            Command="{Binding UpdateEncoding}"
+                                            CommandParameter="UTF-8"
+                                            IsChecked="{Binding TextEncoding,Converter={StaticResource EncodingCvt},ConverterParameter=UTF-8}"/>
+
+                            <NativeMenuItem Header="Unicode" ToggleType="Radio"
+                                            Command="{Binding UpdateEncoding}"
+                                            CommandParameter="Unicode"
+                                            IsChecked="{Binding TextEncoding,Converter={StaticResource EncodingCvt},ConverterParameter=Unicode}"/>
+
+                            <NativeMenuItem Header="GB18030" ToggleType="Radio"
+                                            Command="{Binding UpdateEncoding}"
+                                            CommandParameter="GB18030"
+                                            IsChecked="{Binding TextEncoding,Converter={StaticResource EncodingCvt},ConverterParameter=GB18030}"/>
+                        </NativeMenu>
+                    </NativeMenuItem>
+                </NativeMenu>
+            </NativeMenuItem>
+
+            <NativeMenuItem Header="Filters">
+                <NativeMenu>
+                    <NativeMenuItem Header="Add New Filter..." Gesture="Meta+N"
+                                    Command="{Binding AddFilter}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Previous Match" Gesture="Shift+F8"
+                                    Command="{Binding FindPreviousMatchCommand}"
+                                    ToolTip="You can also press Shift + a-z (filter ID) to find matches"/>
+                    <NativeMenuItem Header="Next Match" Gesture="F8"
+                                    Command="{Binding FindNextMatchCommand}"
+                                    ToolTip="You can also press a-z (filter ID) to find matches"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Edit Selected Filter"
+                                    Command="{Binding EditSelectedFilterCommand}"/>
+                    <NativeMenuItem Header="Remove Selected Filter"
+                                    Command="{Binding RemoveSelectedFilterCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Enable All Filters"
+                                    Command="{Binding EnableAllFiltersCommand}"/>
+                    <NativeMenuItem Header="Disable All Filters"
+                                    Command="{Binding DisableAllFiltersCommand}"/>
+                    <NativeMenuItem Header="Remove All Filters"
+                                    Command="{Binding RemoveAllFiltersCommand}"/>
+                </NativeMenu>
+            </NativeMenuItem>
+
+            <NativeMenuItem Header="Help">
+                <NativeMenu>
+                    <NativeMenuItem Header="Help" Command="{Binding ShowHelp}"/>
+                    <NativeMenuItem Header="About" Command="{Binding ShowAbout}"/>
+                </NativeMenu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="0.8*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Menu x:Name="_AppMenu" BorderThickness="0,0,0,1" BorderBrush="LightGray">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="_OpenTextFile" Header="_Open" InputGesture="Ctrl+O"
+                          Command="{Binding OpenTextFile}"/>
+                <MenuItem Header="_Reload" InputGesture="F5"
+                          Command="{Binding ReloadTextFileCommand}"/>
+                <MenuItem Header="_Save Current Lines..." InputGesture="Ctrl+Shift+S"
+                          Command="{Binding SaveCurrentLinesCommand}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem x:Name="_LoadFilters" Header="_Load Filters..."
+                          Command="{Binding LoadFilters}"/>
+                <MenuItem Header="Sa_ve Filters..." Command="{Binding SaveFiltersCommand}"
+                          InputGesture="Ctrl+S"/>
+                <MenuItem Header="S_ave Filters As..." Command="{Binding SaveFiltersAsCommand}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="Recent _Files" ItemsSource="{Binding RecentFiles}"
+                          ItemTemplate="{StaticResource RecentItemTemplate}">
+                    <MenuItem.Styles>
+                        <Style Selector="MenuItem:empty" x:DataType="vm:RecentItemVM">
+                            <Setter Property="Command"
+                                    Value="{Binding Command, ElementName=_OpenTextFile}"/>
+                            <Setter Property="CommandParameter" Value="{Binding Name}"/>
+                        </Style>
+                    </MenuItem.Styles>
+                </MenuItem>
+
+                <MenuItem Header="Recent F_ilters" ItemsSource="{Binding RecentFilters}"
+                          ItemTemplate="{StaticResource RecentItemTemplate}">
+                    <MenuItem.Styles>
+                        <Style Selector="MenuItem:empty" x:DataType="vm:RecentItemVM">
+                            <Setter Property="Command"
+                                    Value="{Binding Command, ElementName=_LoadFilters}"/>
+                            <Setter Property="CommandParameter" Value="{Binding Name}"/>
+                        </Style>
+                    </MenuItem.Styles>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C"
+                          ToolTip.Tip="Can copy texts or filters depending on current focused area"/>
+                <MenuItem Header="Copy _With Lines" InputGesture="Ctrl+Shift+C"
+                          Command="{Binding CopyWithLinesCommand}"/>
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V"
+                          ToolTip.Tip="Can paste texts or filters depending on current focused area"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="Copy F_ilters" Command="{Binding CopyFiltersCommand}"/>
+                <MenuItem Header="Paste Fi_lters" Command="{Binding PasteFiltersCommand}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="Select _All" InputGesture="Ctrl+A"
+                          Command="{Binding SelectAllTextsCommand}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="_Go To..." InputGesture="Ctrl+G"
+                          Command="{Binding GoToLineCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_View">
+                <MenuItem Header="S_how Only Filtered Lines"
+                          Command="{Binding ToggleShowOnlyFilteredLines}"
+                          ToggleType="CheckBox" InputGesture="Ctrl+H"
+                          IsChecked="{Binding IsShowOnlyFilteredLines}"/>
+                <MenuItem Header="Hi_de Empty Lines" ToggleType="CheckBox"
+                          Command="{Binding ToggleHideEmptyLines}"
+                          IsChecked="{Binding IsHideEmptyLines}"/>
+
+                <MenuItem Header="Show _Markers">
+                    <MenuItem Header="_Always" ToggleType="Radio"
+                              Command="{Binding ShowMarkers}"
+                              CommandParameter="{StaticResource TrueValue}"/>
+
+                    <MenuItem Header="_Never" ToggleType="Radio"
+                              Command="{Binding ShowMarkers}"
+                              CommandParameter="{StaticResource FalseValue}"/>
+
+                    <MenuItem Header="_Only When In Use" ToggleType="Radio"
+                              Command="{Binding ShowMarkers}"
+                              CommandParameter="{x:Null}"
+                              IsChecked="True"/>
+                </MenuItem>
+                <MenuItem Header="-" />
+
+                <MenuItem x:Name="_ZoomIn" Header="Zoom _In"
+                          InputGesture="Ctrl++" Command="{Binding ZoomInCommand}"/>
+                <MenuItem x:Name="_ZoomOut" Header="Zoom _Out"
+                          InputGesture="Ctrl+-" Command="{Binding ZoomOutCommand}"/>
+                <MenuItem Header="_Reset Zoom" InputGesture="Ctrl+D0"
+                          Command="{Binding ResetZoom}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="_Encoding">
+                    <MenuItem Header="System _Default" ToggleType="Radio"
+                              Command="{Binding UpdateEncoding}"
+                              CommandParameter="Default"/>
+
+                    <MenuItem Header="UTF-_8" ToggleType="Radio"
+                              Command="{Binding UpdateEncoding}"
+                              CommandParameter="UTF-8"
+                              IsChecked="True"/>
+
+                    <MenuItem Header="_Unicode" ToggleType="Radio"
+                              Command="{Binding UpdateEncoding}"
+                              CommandParameter="Unicode"/>
+
+                    <MenuItem Header="_GB18030" ToggleType="Radio"
+                              Command="{Binding UpdateEncoding}"
+                              CommandParameter="GB18030"/>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="Fi_lters">
+                <MenuItem Header="Add _New Filter..." InputGesture="Ctrl+N"
+                          Command="{Binding AddFilter}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="_Previous Match" InputGesture="Shift+F8"
+                          Command="{Binding FindPreviousMatchCommand}"
+                          ToolTip.Tip="You can also press Shift + a-z (filter ID) to find matches"/>
+                <MenuItem Header="Ne_xt Match" InputGesture="F8"
+                          Command="{Binding FindNextMatchCommand}"
+                          ToolTip.Tip="You can also press a-z (filter ID) to find matches"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="_Edit Selected Filter"
+                          Command="{Binding EditSelectedFilterCommand}"/>
+                <MenuItem Header="_Remove Selected Filter"
+                          Command="{Binding RemoveSelectedFilterCommand}"/>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="E_nable All Filters"
+                          Command="{Binding EnableAllFiltersCommand}"/>
+                <MenuItem Header="_Disable All Filters"
+                          Command="{Binding DisableAllFiltersCommand}"/>
+                <MenuItem Header="Remove A_ll Filters"
+                          Command="{Binding RemoveAllFiltersCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_Help">
+                <MenuItem Header="_Help" Command="{Binding ShowHelp}"/>
+                <MenuItem Header="_About" Command="{Binding ShowAbout}"/>
+            </MenuItem>
+        </Menu>
+
+        <TreeDataGrid Grid.Row="1" x:Name="_Texts" Source="{Binding TextsSource}"
+                      CanUserResizeColumns="True" CanUserSortColumns="False"
+                      FontSize="{Binding TextFontSize}"
+                      DoubleTapped="On_Texts_DoubleTapped"
+                      ShowColumnHeaders="{Binding ShowTextHeaders}"
+                      ScrollViewer.BringIntoViewOnFocusChange="False">
+            <TreeDataGrid.Styles>
+                <Style Selector=":is(TreeDataGridCell)">
+                    <Setter Property="MinHeight" Value="12"/>
+                    <Setter Property="Padding" Value="0"/>
+                </Style>
+                <Style Selector=":is(TextBlock)">
+                    <Setter Property="Padding" Value="0,1"/>
+                </Style>
+            </TreeDataGrid.Styles>
+
+            <TreeDataGrid.ContextMenu>
+                <ContextMenu x:Name="_TextItemMenu">
+                    <MenuItem x:Name="_ViewText" Header="_View"
+                              Command="{Binding ViewSelectedText}"/>
+
+                    <MenuItem x:Name="_MarkerMenu" Header="_Marker">
+                        <MenuItem Header="1" InputGesture="Ctrl+D1"
+                                  Command="{Binding ToggleMarker}" CommandParameter="1"/>
+                        <MenuItem Header="2" InputGesture="Ctrl+D2"
+                                  Command="{Binding ToggleMarker}" CommandParameter="2"/>
+                        <MenuItem Header="3" InputGesture="Ctrl+D3"
+                                  Command="{Binding ToggleMarker}" CommandParameter="3"/>
+                        <MenuItem Header="4" InputGesture="Ctrl+D4"
+                                  Command="{Binding ToggleMarker}" CommandParameter="4"/>
+                        <MenuItem Header="5" InputGesture="Ctrl+D5"
+                                  Command="{Binding ToggleMarker}" CommandParameter="5"/>
+                        <MenuItem Header="6" InputGesture="Ctrl+D6"
+                                  Command="{Binding ToggleMarker}" CommandParameter="6"/>
+                        <MenuItem Header="7" InputGesture="Ctrl+D7"
+                                  Command="{Binding ToggleMarker}" CommandParameter="7"/>
+                        <MenuItem Header="8" InputGesture="Ctrl+D8"
+                                  Command="{Binding ToggleMarker}" CommandParameter="8"/>
+                        <MenuItem Header="9" InputGesture="Ctrl+D9"
+                                  Command="{Binding ToggleMarker}" CommandParameter="9"/>
+                    </MenuItem>
+                </ContextMenu>
+            </TreeDataGrid.ContextMenu>
+        </TreeDataGrid>
+
+        <GridSplitter Grid.Row="2" Height="1" HorizontalAlignment="Stretch" Background="#EEEEEE"/>
+
+        <!--Temporally disable drag & drop on Mac since it will crash-->
+        <TreeDataGrid Grid.Row="3" x:Name="_Filters" Source="{Binding FiltersSource}"
+                      CanUserResizeColumns="True" CanUserSortColumns="False"
+                      AutoDragDropRows="{OnPlatform True, macOS=False}"
+                      KeyUp="On_Filters_KeyUp" DoubleTapped="On_Filters_DoubleTapped">
+            <TreeDataGrid.Styles>
+                <Style Selector=":is(TreeDataGridCell)">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="MinHeight" Value="14"/>
+                    <Setter Property="MaxHeight" Value="24"/>
+                </Style>
+            </TreeDataGrid.Styles>
+
+            <TreeDataGrid.ContextMenu>
+                <ContextMenu x:Name="_FilterItemMenu">
+                    <MenuItem x:Name="_PreviousMatch" Header="_Previous Match"
+                              Command="{Binding FindPreviousMatchCommand}"
+                              InputGesture="Shift+F8"
+                              ToolTip.Tip="You can also press Shift + a-z (filter ID) to find matches"/>
+                    <MenuItem x:Name="_NextMatch" Header="Ne_xt Match"
+                              Command="{Binding FindNextMatchCommand}" InputGesture="F8"
+                              ToolTip.Tip="You can also press a-z (filter ID) to find matches"/>
+                    <MenuItem Header="-" />
+
+                    <MenuItem x:Name="_MoveUpFilter" Header="Move _Up"
+                              InputGesture="{OnPlatform Ctrl+Up, macOS='Meta+Up'}"
+                              Command="{Binding MoveUpFilter}"/>
+                    <MenuItem x:Name="_MoveDownFilter" Header="Move _Down"
+                              InputGesture="{OnPlatform Ctrl+Down, macOS='Meta+Down'}"
+                              Command="{Binding MoveDownFilter}"/>
+                    <MenuItem Header="-" />
+
+                    <MenuItem x:Name="_EditFilter" Header="_Edit..."
+                              Command="{Binding EditSelectedFilterCommand}"/>
+                    <MenuItem x:Name="_RemoveFilter" Header="_Remove"
+                              Command="{Binding RemoveSelectedFilterCommand}"/>
+                    <MenuItem Header="-" />
+
+                    <MenuItem Header="_Copy" Command="{Binding CopyFiltersCommand}"/>
+                    <MenuItem Header="P_aste" Command="{Binding PasteFiltersCommand}"/>
+                    <MenuItem Header="-" />
+
+                    <MenuItem Header="Add New Filter..." Command="{Binding AddFilter}"/>
+                </ContextMenu>
+            </TreeDataGrid.ContextMenu>
+        </TreeDataGrid>
+
+        <Border Grid.Row="4" BorderBrush="LightGray" BorderThickness="0,1,0,0">
+            <DockPanel Margin="1">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding IsShowOnlyFilteredLines}">
+                        <Rectangle Width="1" Fill="LightGray"/>
+                        <Image Source="/Assets/Filter.png"
+                               Width="12" Height="12" Margin="5,0"/>
+                    </StackPanel>
+                    <Rectangle Width="1" Fill="LightGray"/>
+                    <TextBlock Margin="5,0">Total:</TextBlock>
+                    <TextBlock Text="{Binding TotalLines}" TextAlignment="Center" MinWidth="40"/>
+                    <Rectangle Width="1" Margin="5,0" Fill="LightGray"/>
+                    <TextBlock Text="{Binding ZoomRatio,StringFormat={}{0:P0}}" Margin="0,0,5,0"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Status}" Margin="2,0"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+
+</Window>

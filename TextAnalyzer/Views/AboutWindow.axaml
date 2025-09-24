@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="410" d:DesignHeight="250"
+        x:Class="TextAnalyzer.AboutWindow"
+        Title="About Text Analyzer" WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False" SizeToContent="WidthAndHeight"
+        CanResize="False">
+    <StackPanel Margin="12">
+        <DockPanel>
+            <Image HorizontalAlignment="Left" Width="64"
+                   Source="/Assets/TextAnalyzer.ico"/>
+
+            <TextBlock Margin="10" HorizontalAlignment="Left"
+                       Text="Inspired by TextAnalysisTool.Net"/>
+        </DockPanel>
+
+        <Grid Margin="0,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       Text="Author:"/>
+            <TextBlock Grid.Row="0" Grid.Column="2"
+                       Text="jay-mao-cn@qq.com"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                       Text="Source code:"/>
+            <HyperlinkButton Grid.Row="1" Grid.Column="2" Padding="0"
+                             Content="https://github.com/jay-mao-cn/TextAnalyzer"
+                             Click="On_SrcCodeLink_Click"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                       Text="License:"/>
+            <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"
+                       Text="MIT"/>
+        </Grid>
+
+        <Button HorizontalAlignment="Center" MinWidth="50"
+                HorizontalContentAlignment="Center"
+                IsDefault="True" IsCancel="True"
+                Click="On_OK_Click">OK</Button>
+    </StackPanel>
+</Window>

@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TextAnalyzer.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="TextAnalyzer.TextViewerWindow"
+        x:DataType="vm:TextViewerVM"
+        MinWidth="400" MinHeight="100" Title="Text Viewer" FontFamily="Verdana"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+    <DockPanel Margin="12">
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <Button DockPanel.Dock="Right" Command="{Binding AddFilter}"
+                    Content="_Add New Filter..."/>
+            <StackPanel Orientation="Horizontal" ClipToBounds="True">
+                <TextBox x:Name="_TextToFind" MinWidth="90"
+                         Text="{Binding TextToFind, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button x:Name="_Find" Margin="4,0" Content="_Find"
+                        Command="{Binding FindCommand}"
+                        ToolTip.Tip="Press F3 to find next, press Shift+F3 to find previous"/>
+                <TextBlock VerticalAlignment="Center" Foreground="Brown"
+                           IsVisible="{Binding !IsTextFound}">Not found!</TextBlock>
+            </StackPanel>
+        </DockPanel>
+
+        <TextBox IsReadOnly="True" Text="{Binding Text}" TextWrapping="Wrap"
+                 SelectionStart="{Binding SelectionStart,Mode=TwoWay}"
+                 SelectionEnd="{Binding SelectionEnd,Mode=TwoWay}">
+            <TextBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Format _Json" Command="{Binding FormatJson}"/>
+                    <MenuItem Header="Format End of _Line" Command="{Binding FormatEOL}"/>
+                </ContextMenu>
+            </TextBox.ContextMenu>
+        </TextBox>
+    </DockPanel>
+</Window>

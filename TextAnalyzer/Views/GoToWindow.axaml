@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TextAnalyzer.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="100"
+        x:Class="TextAnalyzer.GoToWindow"
+        CanResize="False" SizeToContent="Height" Width="220" x:DataType="vm:GoToVM"
+        Title="Go To" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="12">
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Left" Margin="0,0,6,0"
+                       VerticalAlignment="Center">Line number:</TextBlock>
+            <TextBox x:Name="_LineNum" Text="{Binding LineNumber}"
+                     ToolTip.Tip="The original line number before filtered"/>
+        </DockPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button IsDefault="True" Margin="8,0" MinWidth="50"
+                    HorizontalContentAlignment="Center"
+                    Click="ButtonOK_Click">OK</Button>
+            <Button IsCancel="True" Click="ButtonCancel_Click">Cancel</Button>
+        </StackPanel>
+    </StackPanel>
+</Window>

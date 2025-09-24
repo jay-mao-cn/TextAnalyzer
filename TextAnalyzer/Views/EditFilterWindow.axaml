@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="using:Avalonia.Controls"
+        xmlns:vm="using:TextAnalyzer.ViewModels"
+        xmlns:model="using:TextAnalyzer.Models"
+        xmlns:cvt="using:TextAnalyzer.Converters"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="320"
+        x:DataType="vm:EditFilterVM"
+        x:Class="TextAnalyzer.EditFilterWindow"
+        Title="{Binding Title}" SizeToContent="Height" FontSize="12" CanResize="False"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+    <Design.DataContext>
+        <vm:EditFilterVM/>
+    </Design.DataContext>
+
+    <Window.Resources>
+        <sys:Double x:Key="FirstColumnWidth">70</sys:Double>
+        <cvt:EqualityConverter x:Key="EqualityCvt"/>
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="ColorPicker">
+            <Setter Property="Palette">
+                <Setter.Value>
+                    <ctrl:MaterialHalfColorPalette/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="12">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Filter:" VerticalAlignment="Center" TextAlignment="Right"
+                       Width="{StaticResource FirstColumnWidth}"/>
+            <ComboBox MinWidth="60" Margin="5,0,10,0" VerticalAlignment="Center"
+                      ItemsSource="{Binding FilterTypes}"
+                      SelectedItem="{Binding SelectedFilterType}"/>
+
+            <TextBlock Text="Text Color:" VerticalAlignment="Center"/>
+            <ColorPicker Color="{Binding SelectedTextColor}" Margin="5,0,10,0"/>
+
+            <TextBlock Text="Background:" VerticalAlignment="Center"/>
+            <ColorPicker Color="{Binding SelectedBackgroundColor}" Margin="5,0,10,0"/>
+        </StackPanel>
+
+        <DockPanel Margin="0,10"
+                   IsVisible="{Binding SelectedFilterType,
+                               Converter={StaticResource EqualityCvt},
+                               ConverterParameter={x:Static model:FilterType.Text}}">
+            <TextBlock DockPanel.Dock="Left" Text="Text:" TextAlignment="Right"
+                       Width="{StaticResource FirstColumnWidth}"
+                       VerticalAlignment="Center"/>
+            <TextBox x:Name="_Text" Text="{Binding Text}" TextWrapping="Wrap"
+                     Margin="5,0,10,0" MaxHeight="300"/>
+        </DockPanel>
+
+        <DockPanel Margin="0,10"
+                   IsVisible="{Binding SelectedFilterType,
+                               Converter={StaticResource EqualityCvt},
+                               ConverterParameter={x:Static model:FilterType.Marker}}">
+            <TextBlock DockPanel.Dock="Left" Text="Marker:" TextAlignment="Right"
+                       Width="{StaticResource FirstColumnWidth}"
+                       VerticalAlignment="Center"/>
+            <ComboBox Margin="5,0,10,0" ItemsSource="{Binding Markers}"
+                      SelectedItem="{Binding SelectedMarker}"/>
+        </DockPanel>
+
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Left" Text="Description:"
+                       Width="{StaticResource FirstColumnWidth}"
+                       VerticalAlignment="Center" TextAlignment="Right"/>
+            <TextBox Text="{Binding Description}" Margin="5,0,10,0"/>
+        </DockPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="70,10,0,10">
+            <CheckBox Margin="5,0,20,0" Content="E_xcluding [!]"
+                      IsChecked="{Binding IsExcluded}"/>
+
+            <StackPanel Orientation="Horizontal"
+                        IsVisible="{Binding SelectedFilterType,
+                                   Converter={StaticResource EqualityCvt},
+                                   ConverterParameter={x:Static model:FilterType.Text}}">
+
+                <CheckBox Content="_Case Sensitive [Aa]"
+                          IsChecked="{Binding IsCaseSensitive}"/>
+
+                <CheckBox Margin="20,0" Content="_Regular Expression [R]"
+                          IsChecked="{Binding IsRegularExpression}"/>
+
+                <CheckBox Content="_Logic Operation [&amp;]"
+                          IsChecked="{Binding IsLogicOperation}"
+                          IsEnabled="{Binding !IsRegularExpression}"
+                          ToolTip.Tip="Can use &amp;&amp; or || logic operations in Text.&#x0a;Note: &#x0a;1. Need to add a space around the &amp;&amp; or ||. &#x0a;2. Can use same operator multiple times but can NOT be mixed."/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="OK" Click="ButtonOK_Click" Margin="10,0"
+                    HorizontalContentAlignment="Center" Width="60"
+                    IsEnabled="{Binding IsFilterValid}" IsDefault="True"/>
+            <Button Content="Cancel" Click="ButtonCancel_Click" Margin="10,0"
+                    HorizontalContentAlignment="Center" Width="60" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
