@@ -1,3 +1,5 @@
+<h1>About</h1>
+<p>Inspired by TextAnalysisTool.NET, implemented by Avalonia UI to support Windows/Mac/Linux.</p>
 <h1>Build</h1>
 <p>Install dotnet 8.0 SDK.</p>
 <h2>Windows</h2>
@@ -15,7 +17,7 @@
 <p>You can also make it available in System context menu's "Open with" by "Choose another app".</p>
 <h2>Mac</h2>
 <ol>
-  <li>In VS Code, click "Terminal"->"Run Task...", select "publish".</li>
+  <li>In VS Code, click "Terminal"->"Run Task...", select "publish x64|arm64".</li>
   <li>Run "sh ./Scripts/package_mac_app.sh" in terminal.</li>
   <li>Drag & drop the "Text Analyzer.app" in the "bin" folder to System "Applications".</li>
   <li>The app will be available in the "Open With" context menu for text files.</li>

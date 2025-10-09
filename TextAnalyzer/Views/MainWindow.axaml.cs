@@ -138,7 +138,7 @@ namespace TextAnalyzer.Views
 
                 recentFilterMenu!.Menu!.Items.Add(new NativeMenuItemSeparator() { Header = "-" });
                 var clearRecentFilters = new NativeMenuItem() { Header = "Clear Recent Filters List" };
-                clearRecentFilters.Bind(NativeMenuItem.CommandProperty, 
+                clearRecentFilters.Bind(NativeMenuItem.CommandProperty,
                     new Binding("ClearRecentFilters") { Source = DataContext });
                 recentFilterMenu.Menu.Items.Add(clearRecentFilters);
 
@@ -386,28 +386,23 @@ namespace TextAnalyzer.Views
         void On_Texts_DragOver(object? sender, DragEventArgs e)
         {
             // Only allow files to be dropped
-            e.DragEffects = e.Data.Contains(DataFormats.Files)
+            e.DragEffects = e.DataTransfer.Formats.Contains(DataFormat.File)
                 ? DragDropEffects.Copy
                 : DragDropEffects.None;
         }
 
         void On_Texts_Drop(object? sender, DragEventArgs e)
         {
-            if (e.Data.Contains(DataFormats.Files))
+            if (e.DataTransfer.Formats.Contains(DataFormat.File))
             {
-                var files = e.Data.GetFiles();
-                if (files != null)
+                var file = e.DataTransfer.TryGetFile();
+                if (file != null)
                 {
                     if (DataContext is IFileHandler handler)
                     {
-                        foreach (var file in files)
+                        if (file is IStorageFile storageFile)
                         {
-                            if (file is IStorageFile storageFile)
-                            {
-                                handler.LoadFile(storageFile, FileType.Text);
-                                // can only load one file
-                                break;
-                            }
+                            handler.LoadFile(storageFile, FileType.Text);
                         }
                     }
                 }

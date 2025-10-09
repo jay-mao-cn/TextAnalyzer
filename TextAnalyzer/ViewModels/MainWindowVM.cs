@@ -1,8 +1,10 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -23,7 +25,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Controls.Primitives;
 using TextAnalyzer.Converters;
 using TextAnalyzer.Helpers;
 using TextAnalyzer.Interfaces;
@@ -140,8 +141,8 @@ namespace TextAnalyzer.ViewModels
                         return CanPasteFilters();
 
                     default:
-                        var formats = _topLevel.Clipboard!.GetFormatsAsync().Result;
-                        return formats.Contains("Text");
+                        var formats = _topLevel.Clipboard!.GetDataFormatsAsync().Result;
+                        return formats.Contains(DataFormat.Text);
                 }
             });
 
@@ -1357,7 +1358,7 @@ namespace TextAnalyzer.ViewModels
 
         #region Copy & Paste
 
-        const string FilterFormatInClipboard = "application/x-TextAnalyzer-filter";
+        const string FilterFormatInClipboard = "x-TextAnalyzer-filter";
 
         void Copy()
         {
@@ -1398,8 +1399,8 @@ namespace TextAnalyzer.ViewModels
                     break;
 
                 default:
-                    var formats = await _topLevel.Clipboard!.GetFormatsAsync();
-                    if (formats.Contains(FilterFormatInClipboard))
+                    var formats = await _topLevel.Clipboard!.GetDataFormatsAsync();
+                    if (formats.Any(f => f.Identifier == FilterFormatInClipboard))
                     {
                         PasteFilters();
                     }
@@ -1413,47 +1414,46 @@ namespace TextAnalyzer.ViewModels
 
         async void CopyFilters()
         {
-            var data = new DataObject();
+            var data = new DataTransfer();
             var jsonStr = JsonSerializer.Serialize(
                 FiltersSource.RowSelection!.SelectedItems.Select(
                     item => item!.ToModel()));
-            data.Set(FilterFormatInClipboard, Encoding.UTF8.GetBytes(jsonStr));
+            var fmt = DataFormat.CreateBytesApplicationFormat(FilterFormatInClipboard);
+            var item = DataTransferItem.Create(fmt, Encoding.UTF8.GetBytes(jsonStr));
+            data.Add(item);
 
-            await _topLevel.Clipboard!.SetDataObjectAsync(data);
+            await _topLevel.Clipboard!.SetDataAsync(data);
         }
 
         bool CanPasteFilters()
         {
-            var formats = _topLevel.Clipboard!.GetFormatsAsync().Result;
-            return formats.Contains(FilterFormatInClipboard);
+            var formats = _topLevel.Clipboard!.GetDataFormatsAsync().Result;
+            return formats.Any(f => f.Identifier == FilterFormatInClipboard);
         }
 
         async void PasteFilters()
         {
             try
             {
-                var data = await _topLevel.Clipboard!.GetDataAsync(
-                    FilterFormatInClipboard);
-                if (data is byte[] bytes)
+                var data = await _topLevel.Clipboard!.TryGetDataAsync();
+                var fmt = DataFormat.CreateBytesApplicationFormat(FilterFormatInClipboard);
+                var bytes = await data!.TryGetValueAsync(fmt);
+                var jsonStr = Encoding.UTF8.GetString(bytes!);
+                var filters = JsonSerializer.Deserialize<List<FilterModel>>(jsonStr);
+                if (filters == null)
+                    return;
+
+                Dispatcher.UIThread.Post(() =>
                 {
-                    var jsonStr = Encoding.UTF8.GetString(bytes);
-                    var filters =
-                        JsonSerializer.Deserialize<List<FilterModel>>(jsonStr);
-                    if (filters == null)
-                        return;
-
-                    Dispatcher.UIThread.Post(() =>
+                    _isBatchProcessingFilters = true;
+                    foreach (var filter in filters)
                     {
-                        _isBatchProcessingFilters = true;
-                        foreach (var filter in filters)
-                        {
-                            _filters.Add(new FilterItemVM(filter));
-                        }
-                        _isBatchProcessingFilters = false;
+                        _filters.Add(new FilterItemVM(filter));
+                    }
+                    _isBatchProcessingFilters = false;
 
-                        FilterTexts();
-                    });
-                }
+                    FilterTexts();
+                });
             }
             catch (Exception ex)
             {
@@ -1492,7 +1492,7 @@ namespace TextAnalyzer.ViewModels
 
         async void PasteTexts()
         {
-            var texts = await _topLevel.Clipboard!.GetTextAsync();
+            var texts = await _topLevel.Clipboard!.TryGetTextAsync();
             if (string.IsNullOrEmpty(texts))
                 return;
 
@@ -1604,7 +1604,7 @@ namespace TextAnalyzer.ViewModels
         {
             RecentFiles.Clear();
         }
-        
+
         public void ClearRecentFilters()
         {
             RecentFilters.Clear();
@@ -1671,7 +1671,7 @@ namespace TextAnalyzer.ViewModels
         void MonitorRecentItemChanges()
         {
             var isMac = OperatingSystem.IsMacOS();
-            
+
             RecentFiles.CollectionChanged += (s, e) =>
             {
                 if (isMac)
@@ -1699,7 +1699,7 @@ namespace TextAnalyzer.ViewModels
                         }
                     }
                 }
-                
+
                 _persistence.Save(
                     RecentFiles.Select(rf => rf.Name), _recentFilesArchivePath);
             };
@@ -1731,7 +1731,7 @@ namespace TextAnalyzer.ViewModels
                         }
                     }
                 }
-                
+
                 _persistence.Save(
                     RecentFilters.Select(rf => rf.Name), _recentFiltersArchivePath);
             };
@@ -1774,7 +1774,7 @@ namespace TextAnalyzer.ViewModels
 
             RecentFilters.Insert(0, new RecentItemVM(filePath));
         }
-        
+
         void SavePerference()
         {
             _preferences.IsShowOnlyFilteredLines = IsShowOnlyFilteredLines;
