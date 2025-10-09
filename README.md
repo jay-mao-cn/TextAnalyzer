@@ -18,10 +18,11 @@
 <h2>Mac</h2>
 <ol>
   <li>In VS Code, click "Terminal"->"Run Task...", select "publish x64|arm64".</li>
-  <li>Run "sh ./Scripts/package_mac_app.sh" in terminal.</li>
+  <li>Run "sh ./Scripts/package_mac_app.sh [x86_64|arm64]" in terminal.</li>
   <li>Drag & drop the "Text Analyzer.app" in the "bin" folder to System "Applications".</li>
   <li>The app will be available in the "Open With" context menu for text files.</li>
-  <li>If you want to sign the app, run "sh ./Scripts/sign_mac_app.sh" (change the developer ID to your own).</li>
+  <li>If you want to sign the app, run "sh ./Scripts/sign_mac_app.sh [x86_64|arm64]" (change the developer ID to your own).</li>
+  <li>Note: If deployed the signed app to another Mac, it may still encounter security warnings, please follow system steps to allow the app to open.</li>
 </ol>
 
 <h1>Usage</h1>
