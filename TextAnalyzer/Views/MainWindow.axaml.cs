@@ -373,7 +373,6 @@ namespace TextAnalyzer.Views
             Dispatcher.UIThread.Post(() =>
             {
                 var curOffsetY = GetSelectedTextOffsetY(true);
-                Debug.Assert(curOffsetY != null);
                 if (curOffsetY == null)
                     return;
 

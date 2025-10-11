@@ -1122,7 +1122,7 @@ namespace TextAnalyzer.ViewModels
                     var activeFilters = filters.Where(f => f.IsEnabled)
                         .OrderByDescending(f => f.Modifiers.Contains(FilterModiferType.Excluding))
                         .ToArray();
-                    bool hasIncludingFilter = filters.Any(f => !f.IsExcluding);
+                    bool hasIncludingFilter = activeFilters.Any(f => !f.IsExcluding);
 
                     for (int i = 0; i < _originalTexts.Count; ++i)
                     {
