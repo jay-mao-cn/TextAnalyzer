@@ -808,6 +808,23 @@ namespace TextAnalyzer.ViewModels
                     startIdx = Math.Max(startIdx, e.OldStartingIndex);
 
                 UpdateFilterNames(startIdx);
+
+                if (e.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    bool hasActiveFilters = false;
+                    foreach (FilterItemVM item in e.OldItems!)
+                    {
+                        if (item.IsEnabled)
+                        {
+                            hasActiveFilters = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasActiveFilters) // Avoid unncessary re-filtering
+                        return;
+                }
+
                 FilterTexts();
             };
 
