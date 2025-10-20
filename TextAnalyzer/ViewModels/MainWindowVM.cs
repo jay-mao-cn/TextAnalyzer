@@ -1269,39 +1269,58 @@ namespace TextAnalyzer.ViewModels
                     }
                 }
 
-                var nextLineNo = filter.FindNextLineNumber(curLineNum, backward);
-                textsSelRow.Clear();
+                var nextLineNum = filter.FindNextLineNumber(curLineNum, backward);
                 if (IsShowOnlyFilteredLines || IsHideEmptyLines)
                 {
-                    for (int i = 1; i <= rowsCnt; ++i)
+                    while (true)
                     {
-                        var idx = curSelIdx + i;
-                        if (backward)
+                        if (nextLineNum == curLineNum)
+                            break;
+
+                        bool foundNextLine = false;
+                        for (int i = 1; i <= rowsCnt; ++i)
                         {
-                            idx = curSelIdx - i;
-                            if (idx < 0)
-                                idx += rowsCnt;
-                        }
-                        else
-                        {
-                            if (idx >= rowsCnt)
-                                idx -= rowsCnt;
+                            var idx = curSelIdx + i;
+                            if (backward)
+                            {
+                                idx = curSelIdx - i;
+                                if (idx < 0)
+                                    idx += rowsCnt;
+                            }
+                            else
+                            {
+                                if (idx >= rowsCnt)
+                                    idx -= rowsCnt;
+                            }
+
+                            var row = TextsSource.Rows[idx].Model as TextLineVM;
+                            Debug.Assert(row != null);
+                            if (row.LineNumber == nextLineNum)
+                            {
+                                if (IsShowOnlyFilteredLines && row.IsExcluded)
+                                    break;
+
+                                if (IsHideEmptyLines && row.Text.Length == 0)
+                                    break;
+
+                                textsSelRow.Clear();
+                                textsSelRow.Select(idx);
+                                foundNextLine = true;
+                                break;
+                            }
                         }
 
-                        var row = TextsSource.Rows[idx].Model as TextLineVM;
-                        Debug.Assert(row != null);
-                        if (row.LineNumber == nextLineNo)
-                        {
-                            textsSelRow.Select(idx);
+                        if (foundNextLine)
                             break;
-                        }
+
+                        nextLineNum = filter.FindNextLineNumber(nextLineNum, backward);
                     }
                 }
                 else
                 {
-                    textsSelRow.Select(nextLineNo - 1);
+                    textsSelRow.Clear();
+                    textsSelRow.Select(nextLineNum - 1);
                 }
-
             }
             catch (Exception ex)
             {
