@@ -89,6 +89,14 @@
                     <NativeMenuItem Header="Select All" Gesture="Meta+A"
                                     Command="{Binding SelectAllTextsCommand}"/>
                     <NativeMenuItemSeparator Header="-" />
+                
+                    <NativeMenuItem Header="Find..." Gesture="Meta+F"
+                                    Command="{Binding FindText}"/>
+                    <NativeMenuItem Header="Find Previous" Gesture="F2"
+                                    Command="{Binding FindPreviousTextCommand}"/>
+                    <NativeMenuItem Header="Find Next" Gesture="F3"
+                                    Command="{Binding FindNextTextCommand}"/>
+                    <NativeMenuItemSeparator Header="-" />
 
                     <NativeMenuItem Header="Go To..." Gesture="Ctrl+G"
                                     Command="{Binding GoToLineCommand}"/>
@@ -261,6 +269,14 @@
 
                 <MenuItem Header="Select _All" InputGesture="Ctrl+A"
                           Command="{Binding SelectAllTextsCommand}"/>
+                <MenuItem Header="-" />
+                
+                <MenuItem Header="_Find..." InputGesture="Ctrl+F"
+                          Command="{Binding FindText}"/>
+                <MenuItem Header="Find P_revious" InputGesture="F2"
+                          Command="{Binding FindPreviousTextCommand}"/>
+                <MenuItem Header="Find Next" InputGesture="F3"
+                          Command="{Binding FindNextTextCommand}"/>
                 <MenuItem Header="-" />
 
                 <MenuItem Header="_Go To..." InputGesture="Ctrl+G"

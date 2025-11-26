@@ -30,7 +30,6 @@ using TextAnalyzer.Helpers;
 using TextAnalyzer.Interfaces;
 using TextAnalyzer.Models;
 using TextAnalyzer.Models.Converters;
-using TextAnalyzer.ViewModels.Converters;
 
 namespace TextAnalyzer.ViewModels
 {
@@ -92,6 +91,8 @@ namespace TextAnalyzer.ViewModels
         public IRelayCommand CopyFiltersCommand { get; private set; }
         public IRelayCommand PasteFiltersCommand { get; private set; }
         public IRelayCommand SelectAllTextsCommand { get; private set; }
+        public IRelayCommand FindPreviousTextCommand { get; private set; }
+        public IRelayCommand FindNextTextCommand { get; private set; }
         public IRelayCommand GoToLineCommand { get; private set; }
         public IRelayCommand ZoomInCommand { get; private set; }
         public IRelayCommand ZoomOutCommand { get; private set; }
@@ -119,7 +120,7 @@ namespace TextAnalyzer.ViewModels
 
             CopyCommand = new RelayCommand(Copy, () =>
             {
-                var focusedArea = _focusMonitor.GetFocusedArea();
+                var focusedArea = _focusMonitor?.GetFocusedArea();
                 switch (focusedArea)
                 {
                     case FocusedArea.Filters:
@@ -134,15 +135,15 @@ namespace TextAnalyzer.ViewModels
 
             PasteCommand = new RelayCommand(Paste, () =>
             {
-                var focusedArea = _focusMonitor.GetFocusedArea();
+                var focusedArea = _focusMonitor?.GetFocusedArea();
                 switch (focusedArea)
                 {
                     case FocusedArea.Filters:
                         return CanPasteFilters();
 
                     default:
-                        var formats = _topLevel.Clipboard!.GetDataFormatsAsync().Result;
-                        return formats.Contains(DataFormat.Text);
+                        var formats = _topLevel?.Clipboard!.GetDataFormatsAsync().Result;
+                        return formats?.Contains(DataFormat.Text) == true;
                 }
             });
 
@@ -152,6 +153,12 @@ namespace TextAnalyzer.ViewModels
 
             SelectAllTextsCommand = new RelayCommand(
                 SelectAllTexts, () => _texts.Count > 0);
+
+            FindPreviousTextCommand = new RelayCommand(() => FindNextText(true),
+                () => _textFinder != null);
+
+            FindNextTextCommand = new RelayCommand(() => FindNextText(false),
+                () => _textFinder != null);
 
             GoToLineCommand = new RelayCommand(GoToLine, () => _texts.Count > 0);
 
@@ -437,6 +444,68 @@ namespace TextAnalyzer.ViewModels
 
             TextsSource.RowSelection.EndBatchUpdate();
         }
+
+        #region Find Text
+
+        FilterRunner? _textFinder = null;
+
+        public async void FindText()
+        {
+            var vm = new FindVM(TextsSource.RowSelection?.SelectedItem?.Text);
+            var wnd = new FindWindow() { DataContext = vm };
+            var owner = _topLevel as Window;
+            Debug.Assert(owner != null);
+            await wnd.ShowDialog<bool>(owner).ContinueWith(
+                result =>
+                {
+                    vm.Dispose();
+
+                    if (!result.Result)
+                        return;
+
+                    _textFinder = new FilterRunner(vm.GetFilter());
+                    Dispatcher.UIThread.Post(() => FindNextText(false));
+                });
+        }
+
+        void FindNextText(bool backward)
+        {
+            var textsCount = _texts.Count;
+            var curSelectedLineIdx = backward ? textsCount : -1;
+            var rowSelection = TextsSource.RowSelection;
+            if (rowSelection!.SelectedItems.Count > 0)
+                curSelectedLineIdx = rowSelection!.SelectedIndex.First();
+            var foundLineIdx = -1;
+            int step = backward ? -1 : 1;
+
+            var idx = curSelectedLineIdx + step;
+            for (int i = 0; i < textsCount; ++i)
+            {
+                var realIdx = idx % textsCount;
+                var textLine = _texts[realIdx];
+                if (_textFinder!.Match(textLine.Text, null))
+                {
+                    foundLineIdx = realIdx;
+                    break;
+                }
+
+                idx += step;
+                if (idx < 0)
+                    idx = textsCount - 1;
+            }
+
+            if (foundLineIdx >= 0)
+            {
+                rowSelection!.Clear();
+                rowSelection.Select(new IndexPath(foundLineIdx));
+            }
+            else
+            {
+                // TODO: Update status
+            }
+        }
+
+        #endregion
 
         async void GoToLine()
         {
@@ -854,9 +923,7 @@ namespace TextAnalyzer.ViewModels
 
                     Dispatcher.UIThread.Post(() =>
                     {
-                        var filterItem = new FilterItemVM();
-                        FilterItemVMConverter.Convert(vm, filterItem);
-                        _filters.Add(filterItem);
+                        _filters.Add(new FilterItemVM(vm.GetModel()));
                     });
                 });
         }
@@ -940,7 +1007,7 @@ namespace TextAnalyzer.ViewModels
 
                     Dispatcher.UIThread.Post(() =>
                     {
-                        FilterItemVMConverter.Convert(vm, filterItem);
+                        filterItem.Update(vm.GetModel());
                         FilterTexts();
                     });
                 });
@@ -1133,7 +1200,7 @@ namespace TextAnalyzer.ViewModels
                 {
                     foreach (var filter in filters)
                     {
-                        filter.HitLines.Clear();
+                        filter.ClearHits();
                     }
 
                     var activeFilters = filters.Where(f => f.IsEnabled)
@@ -1162,7 +1229,7 @@ namespace TextAnalyzer.ViewModels
                         {
                             if (filter.Match(text, line.Markers))
                             {
-                                filter.HitLines.Add(line.LineNumber);
+                                filter.AddHitLine(line.LineNumber);
                                 if (!matchAnyFilter)
                                 {
                                     matchAnyFilter = true;
@@ -1463,8 +1530,8 @@ namespace TextAnalyzer.ViewModels
 
         bool CanPasteFilters()
         {
-            var formats = _topLevel.Clipboard!.GetDataFormatsAsync().Result;
-            return formats.Any(f => f.Identifier == FilterFormatInClipboard);
+            var formats = _topLevel?.Clipboard?.GetDataFormatsAsync().Result;
+            return formats?.Any(f => f.Identifier == FilterFormatInClipboard) == true;
         }
 
         async void PasteFilters()

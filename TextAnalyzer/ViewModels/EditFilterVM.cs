@@ -1,5 +1,6 @@
 ﻿using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using TextAnalyzer.Models;
 
@@ -102,6 +103,37 @@ namespace TextAnalyzer.ViewModels
             _isCaseSensitive = model.IsCaseSensitive;
             _isRegularExpression = model.IsRegularExpression;
             _isLogicOperation = model.IsLogicOperation;
+        }
+
+        internal FilterModel GetModel()
+        {
+            var model = new FilterModel()
+            {
+                FilterType = SelectedFilterType,
+                Description = Description,
+                ForegroundColor = SelectedTextColor,
+                BackgroundColor = SelectedBackgroundColor,
+                IsExcluded = IsExcluded,
+            };
+
+            switch (model.FilterType)
+            {
+                case FilterType.Marker:
+                    model.Marker = SelectedMarker;
+                    break;
+
+                case FilterType.Text:
+                    model.FilterText = Text;
+                    model.IsCaseSensitive = IsCaseSensitive;
+                    model.IsRegularExpression = IsRegularExpression;
+                    model.IsLogicOperation = IsLogicOperation;
+                    break;
+
+                default:
+                    throw new Exception($"Invalid filter type: {model.FilterType}");
+            }
+
+            return model;
         }
     }
 }

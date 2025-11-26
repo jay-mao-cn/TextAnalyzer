@@ -4,9 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
+using TextAnalyzer.Helpers;
 using TextAnalyzer.Models;
 
 namespace TextAnalyzer.ViewModels
@@ -15,12 +14,7 @@ namespace TextAnalyzer.ViewModels
     {
         public static Action? EnablementChanged;
 
-        enum LogicOperType
-        {
-            None,
-            And,
-            Or,
-        }
+        FilterRunner? _filterRunner = null;
 
         // For performance concern
         private bool _useMarker = false;
@@ -37,25 +31,7 @@ namespace TextAnalyzer.ViewModels
             }
         }
 
-        private bool _caseSensitive = false;
-        private bool _useRegularExpression = false;
-        private bool _isLogicOperation = false;
-        private bool IsLogicOperation
-        {
-            get => _isLogicOperation;
-            set
-            {
-                if (_isLogicOperation != value)
-                {
-                    _isLogicOperation = value;
-                    ParseText(Text);
-                }
-            }
-        }
-
         public bool IsExcluding { get; private set; }
-        private string[] _texts = [];
-        private LogicOperType _logicOperator = LogicOperType.None;
 
         private bool _isEnabled = true;
         public bool IsEnabled
@@ -82,12 +58,11 @@ namespace TextAnalyzer.ViewModels
         public string Text
         {
             get => _text;
-            set
+            private set
             {
                 if (_text != value)
                 {
                     _text = value;
-                    ParseText(value);
                     OnPropertyChanged(nameof(Pattern));
                 }
             }
@@ -97,7 +72,7 @@ namespace TextAnalyzer.ViewModels
         public int Marker
         {
             get => _marker;
-            set
+            private set
             {
                 if (_marker != value)
                 {
@@ -129,7 +104,7 @@ namespace TextAnalyzer.ViewModels
         public Color ForegroundColor
         {
             get => _fgColor;
-            set
+            private set
             {
                 if (_fgColor != value)
                 {
@@ -147,7 +122,7 @@ namespace TextAnalyzer.ViewModels
         public Color BackgroundColor
         {
             get => _bgColor;
-            set
+            private set
             {
                 if (_bgColor != value)
                 {
@@ -176,8 +151,8 @@ namespace TextAnalyzer.ViewModels
             }
         }
 
-        public List<int> HitLines { get; private set; } = [];
-        public int Hits => HitLines.Count;
+        List<int> _hitLines = [];
+        public int Hits => _hitLines.Count;
 
         bool _isSelected = false;
         public bool IsSelected
@@ -193,15 +168,14 @@ namespace TextAnalyzer.ViewModels
             }
         }
 
-        public FilterItemVM()
+        internal FilterItemVM(FilterModel model)
         {
-            _fgColor = Colors.Black;
-            _bgColor = Colors.Transparent;
-
+            Update(model);
             Init();
+            OnModifiersUpdate();
         }
 
-        public FilterItemVM(FilterModel model)
+        internal void Update(FilterModel model)
         {
             _isEnabled = model.IsEnabled;
             _fgColor = model.ForegroundColor;
@@ -209,6 +183,7 @@ namespace TextAnalyzer.ViewModels
 
             Description = model.Description;
 
+            Modifiers.Clear();
             if (model.IsExcluded)
                 Modifiers.Add(FilterModiferType.Excluding);
 
@@ -234,67 +209,37 @@ namespace TextAnalyzer.ViewModels
                 }
             }
 
-            Init();
-            OnModifiersUpdate();
+            _filterRunner = new FilterRunner(model);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Match(string input, IEnumerable<int> markers)
+        internal bool Match(string input, IEnumerable<int> markers)
         {
-            if (_useMarker)
-            {
-                return markers.Contains(_marker);
-            }
-
-            if (_useRegularExpression)
-            {
-                var options = _caseSensitive
-                    ? RegexOptions.None : RegexOptions.IgnoreCase;
-                return Regex.IsMatch(input, _text, options);
-            }
-
-            StringComparison comparison = _caseSensitive
-                ? StringComparison.Ordinal
-                : StringComparison.OrdinalIgnoreCase;
-
-            switch (_logicOperator)
-            {
-                case LogicOperType.None:
-                    return input.Contains(_text, comparison);
-
-                case LogicOperType.And:
-                    foreach (var txt in _texts)
-                    {
-                        if (!input.Contains(txt, comparison))
-                            return false;
-                    }
-                    return true;
-
-                case LogicOperType.Or:
-                    foreach (var txt in _texts)
-                    {
-                        if (input.Contains(txt, comparison))
-                            return true;
-                    }
-                    return false;
-
-                default:
-                    return false;
-            }
+            return _filterRunner!.Match(input, markers);
         }
 
-        public void CommitHits()
+        internal void ClearHits()
+        {
+            _hitLines.Clear();
+        }
+
+        internal void AddHitLine(int lineNum)
+        {
+            _hitLines.Add(lineNum);
+        }
+
+        internal void CommitHits()
         {
             OnPropertyChanged(nameof(Hits));
         }
 
-        public int FindNextLineNumber(int curLineNum, bool backward)
+        internal int FindNextLineNumber(int curLineNum, bool backward)
         {
-            Debug.Assert(HitLines.Count > 0);
-            if (HitLines.Count == 0)
+            Debug.Assert(_hitLines.Count > 0);
+            if (_hitLines.Count == 0)
                 return -1;
 
-            int index = HitLines.BinarySearch(curLineNum);
+            int index = _hitLines.BinarySearch(curLineNum);
             if (index < 0)
             {
                 // If not found, BinarySearch returns bitwise complement of next larger element
@@ -303,7 +248,7 @@ namespace TextAnalyzer.ViewModels
                 {
                     if (nextLarger == 0)
                     {
-                        index = HitLines.Count - 1;
+                        index = _hitLines.Count - 1;
                     }
                     else
                     {
@@ -312,7 +257,7 @@ namespace TextAnalyzer.ViewModels
                 }
                 else
                 {
-                    if (nextLarger < HitLines.Count)
+                    if (nextLarger < _hitLines.Count)
                     {
                         index = nextLarger;
                     }
@@ -332,12 +277,12 @@ namespace TextAnalyzer.ViewModels
                     }
                     else
                     {
-                        index = HitLines.Count - 1;
+                        index = _hitLines.Count - 1;
                     }
                 }
                 else
                 {
-                    if (index < HitLines.Count - 1)
+                    if (index < _hitLines.Count - 1)
                     {
                         ++index;
                     }
@@ -348,7 +293,7 @@ namespace TextAnalyzer.ViewModels
                 }
             }
 
-            return HitLines[index];
+            return _hitLines[index];
         }
 
         void Init()
@@ -362,45 +307,7 @@ namespace TextAnalyzer.ViewModels
         void OnModifiersUpdate()
         {
             UseMarker = Modifiers.Contains(FilterModiferType.Marker);
-
-            _caseSensitive =
-                Modifiers.Contains(FilterModiferType.CaseSensitive);
-
-            _useRegularExpression =
-                Modifiers.Contains(FilterModiferType.RegularExpression);
-
-            IsLogicOperation =
-                Modifiers.Contains(FilterModiferType.LogicOperation);
-
             IsExcluding = Modifiers.Contains(FilterModiferType.Excluding);
-        }
-
-        void ParseText(string text)
-        {
-            if (IsLogicOperation)
-            {
-                _texts = text.Split(" && ");
-                if (_texts.Length > 1)
-                {
-                    _logicOperator = LogicOperType.And;
-                }
-                else
-                {
-                    _texts = text.Split(" || ");
-                    if (_texts.Length > 1)
-                    {
-                        _logicOperator = LogicOperType.Or;
-                    }
-                    else
-                    {
-                        _logicOperator = LogicOperType.None;
-                    }
-                }
-            }
-            else
-            {
-                _logicOperator = LogicOperType.None;
-            }
         }
     }
 }
