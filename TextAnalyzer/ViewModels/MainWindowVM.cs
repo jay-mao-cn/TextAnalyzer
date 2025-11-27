@@ -54,8 +54,8 @@ namespace TextAnalyzer.ViewModels
         [ObservableProperty]
         string _appTitle = AppName;
 
-        [ObservableProperty]
-        string _status = string.Empty;
+        List<string> _statusList = new List<string>();
+        public string? Status => _statusList.LastOrDefault();
 
 #pragma warning disable CS8618
         // Non-nullable field must contain a non-null value when exiting constructor.
@@ -501,7 +501,7 @@ namespace TextAnalyzer.ViewModels
             }
             else
             {
-                // TODO: Update status
+                UpdateStatus("Nothing found!", false, 3000);
             }
         }
 
@@ -714,7 +714,7 @@ namespace TextAnalyzer.ViewModels
                     _ = FilterTexts(false);
 
                     AddRecentFile(filePath);
-                    Status = $"Source: {filePath}";
+                    UpdateStatus($"Source: {filePath}", true);
                 });
             });
         }
@@ -1155,20 +1155,7 @@ namespace TextAnalyzer.ViewModels
             {
                 _persistence.Save(filters, filePath);
                 _currentFilterFile = filePath;
-                var status = "Save filters successfully.";
-                if (Status != status)
-                {
-                    var oldStatus = Status;
-                    Status = status;
-                    await BackgroundDispatcher.NewInstance.BeginInvoke(() =>
-                    {
-                        Thread.Sleep(3000);
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            Status = oldStatus;
-                        });
-                    });
-                }
+                UpdateStatus("Save filters successfully.", false, 3000);
             }
             catch (Exception ex)
             {
@@ -1453,7 +1440,7 @@ namespace TextAnalyzer.ViewModels
             }
             catch (Exception e)
             {
-                Status = e.Message;
+                UpdateStatus(e.Message, true);
             }
         }
 
@@ -1616,7 +1603,7 @@ namespace TextAnalyzer.ViewModels
                     TotalLines = _originalTexts.Count;
                     _lineMarkers.Clear();
                     _ = FilterTexts(false);
-                    Status = "Source: Clipboard";
+                    UpdateStatus("Source: Clipboard", true);
                 });
             });
         }
@@ -1925,6 +1912,28 @@ namespace TextAnalyzer.ViewModels
         }
 
         #endregion
+
+        void UpdateStatus(string status, bool clear, int? timeoutMs = null)
+        {
+            if (clear)
+                _statusList.Clear();
+
+            _statusList.Add(status);
+            OnPropertyChanged(nameof(Status));
+
+            if (timeoutMs != null)
+            {
+                BackgroundDispatcher.NewInstance.BeginInvoke(() =>
+                {
+                    Thread.Sleep(timeoutMs.Value);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _statusList.Remove(status);
+                        OnPropertyChanged(nameof(Status));
+                    });
+                });
+            }
+        }
 
         async Task MessageBox(string message, Icon icon = Icon.None)
         {
