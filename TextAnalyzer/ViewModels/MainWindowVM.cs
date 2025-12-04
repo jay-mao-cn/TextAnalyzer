@@ -1709,11 +1709,7 @@ namespace TextAnalyzer.ViewModels
             RecentFilters = new ObservableCollection<RecentItemVM>();
             RecentItemVM.ItemToBeRemoved += OnRecentItemToBeRemoved;
 
-            var parentFolder = Environment.GetFolderPath(
-                Environment.SpecialFolder.LocalApplicationData);
-            var appFolder = Path.Combine(parentFolder, "TextAnalyzer");
-            if (!Directory.Exists(appFolder))
-                Directory.CreateDirectory(appFolder);
+            var appFolder = AppStorageHelper.GetAppArchiveDir();
 
             _preferenceArchivePath = Path.Combine(appFolder, "Preference.json");
             _preferences = _persistence.Load<Preferences>(_preferenceArchivePath) ?? new();
@@ -1887,6 +1883,8 @@ namespace TextAnalyzer.ViewModels
             wnd.ShowDialog<bool>(owner).ContinueWith(
                result =>
                {
+                   vm.Dispose();
+
                    if (!result.Result)
                        return;
 

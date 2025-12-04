@@ -12,6 +12,12 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Right"/>
         </Style>
+
+        <Style Selector="MenuItem:empty" x:DataType="vm:RecentItemVM">
+            <Setter Property="Command"
+                    Value="{Binding Command, ElementName=_LoadConfig}"/>
+            <Setter Property="CommandParameter" Value="{Binding Name}"/>
+        </Style>
     </Window.Styles>
 
     <StackPanel Margin="12">
@@ -30,7 +36,7 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
+
             <TextBlock Classes="caption">Chart Title:</TextBlock>
             <TextBox Grid.Column="2" Text="{Binding Title}"
                      Watermark="Displayed in the Chart Window"/>
@@ -81,24 +87,26 @@
         </Grid>
 
         <Grid>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
-            <Button Margin="8,0" MinWidth="50"
-                    IsEnabled="{Binding IsValid}"
-                    Command="{Binding SaveChartConfig}">Save</Button>
-            <SplitButton Command="{Binding LoadChartConfig}" Content="Load">
-                <SplitButton.Flyout>
-                    <MenuFlyout ItemsSource="{Binding RecentChartConfigs}"/>
-                </SplitButton.Flyout>
-            </SplitButton>
-        </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
+                <Button Margin="8,0" MinWidth="50"
+                        IsEnabled="{Binding IsValid}"
+                        Command="{Binding SaveChartConfig}">Save</Button>
+                <SplitButton x:Name="_LoadConfig" Content="Load"
+                             Command="{Binding LoadChartConfig}">
+                    <SplitButton.Flyout>
+                        <MenuFlyout ItemsSource="{Binding RecentChartConfigs}"
+                                    ItemTemplate="{StaticResource RecentItemTemplate}"/>
+                    </SplitButton.Flyout>
+                </SplitButton>
+            </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button IsDefault="True" Margin="8,0" MinWidth="50"
-                    HorizontalContentAlignment="Center"
-                    IsEnabled="{Binding IsValid}"
-                    Click="ButtonOK_Click">OK</Button>
-            <Button IsCancel="True" Click="ButtonCancel_Click">Cancel</Button>
-        </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button IsDefault="True" Margin="8,0" MinWidth="50"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding IsValid}"
+                        Click="ButtonOK_Click">OK</Button>
+                <Button IsCancel="True" Click="ButtonCancel_Click">Cancel</Button>
+            </StackPanel>
         </Grid>
     </StackPanel>
 </Window>

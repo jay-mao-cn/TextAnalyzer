@@ -1,0 +1,17 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="using:TextAnalyzer.ViewModels">
+
+    <DataTemplate x:Key="RecentItemTemplate" x:DataType="vm:RecentItemVM">
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Background="AliceBlue"
+                    HorizontalContentAlignment="Center" Padding="2,0"
+                    Content="X" Foreground="Red" Margin="5,0,-30,0"
+                    Command="{Binding RemoveItem}"/>
+            <TextBlock VerticalAlignment="Center"
+                        Text="{Binding Name}" ToolTip.Tip="{Binding Name}"
+                        TextTrimming="PrefixCharacterEllipsis"/>
+        </DockPanel>
+    </DataTemplate>
+
+</ResourceDictionary>
