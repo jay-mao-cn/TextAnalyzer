@@ -1,0 +1,104 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:TextAnalyzer.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="620" d:DesignHeight="250"
+        x:Class="TextAnalyzer.EditChartWindow"
+        CanResize="False" SizeToContent="Height" Width="620" x:DataType="vm:EditChartVM"
+        Title="Edit Chart" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+    <Window.Styles>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Classes="caption">Chart Title:</TextBlock>
+            <TextBox Grid.Column="2" Text="{Binding Title}"
+                     Watermark="Displayed in the Chart Window"/>
+
+            <TextBlock Grid.Row="1" Classes="caption">Filter:</TextBlock>
+            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding Filter}"
+                     Watermark="Used to filter the lines" Margin="0,6,0,0"/>
+
+            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                <CheckBox Content="_Case Sensitive"
+                          IsChecked="{Binding IsCaseSensitive}"/>
+
+                <CheckBox Margin="20,0" Content="_Regular Expression"
+                          IsChecked="{Binding IsRegularExpression}"/>
+
+                <CheckBox Content="_Logic Operation"
+                          IsChecked="{Binding IsLogicOperation}"
+                          IsEnabled="{Binding !IsRegularExpression}"
+                          ToolTip.Tip="Can use &amp;&amp; or || logic operations in Text.&#x0a;Note: &#x0a;1. Need to add a space around the &amp;&amp; or ||. &#x0a;2. Can use same operator multiple times but can NOT be mixed."/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="3" Classes="caption">Key:</TextBlock>
+            <TextBox Grid.Row="3" Grid.Column="2" Margin="0,6" Text="{Binding Key}"
+                     Watermark="To locate the values, e.g. 'CPU usage:', 'encoding bitrate:', etc. Case sensitive"/>
+
+            <TextBlock Grid.Row="4" Classes="caption">End Char:</TextBlock>
+            <ComboBox Grid.Row="4" Grid.Column="2" MinWidth="70" IsEditable="True"
+                      ItemsSource="{Binding EndChars}" Text="{Binding EndChar}"/>
+
+            <TextBlock Grid.Row="5" Classes="caption"
+                       ToolTip.Tip="Use counter by default">Label:</TextBlock>
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="2" Margin="0,6">
+                <TextBlock VerticalAlignment="Center">Start Pos:</TextBlock>
+                <TextBox Margin="6,0,12,0" Width="60" Text="{Binding LabelStartPos}"
+                         ToolTip.Tip="Do not count the line number"/>
+                <TextBlock VerticalAlignment="Center">Length:</TextBlock>
+                <TextBox Margin="6,0,12,0" Width="60" Text="{Binding LabelLength}"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="6" Classes="caption">Range:</TextBlock>
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2" Margin="0,6">
+                <TextBlock VerticalAlignment="Center">Start Line:</TextBlock>
+                <TextBox Margin="6,0,12,0" Width="60" Text="{Binding StartLine}"/>
+                <TextBlock VerticalAlignment="Center">End Line:</TextBlock>
+                <TextBox Margin="6,0,12,0" Width="60" Text="{Binding EndLine}"
+                         ToolTip.Tip="Input -1 as infinite"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
+            <Button Margin="8,0" MinWidth="50"
+                    IsEnabled="{Binding IsValid}"
+                    Command="{Binding SaveChartConfig}">Save</Button>
+            <SplitButton Command="{Binding LoadChartConfig}" Content="Load">
+                <SplitButton.Flyout>
+                    <MenuFlyout ItemsSource="{Binding RecentChartConfigs}"/>
+                </SplitButton.Flyout>
+            </SplitButton>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button IsDefault="True" Margin="8,0" MinWidth="50"
+                    HorizontalContentAlignment="Center"
+                    IsEnabled="{Binding IsValid}"
+                    Click="ButtonOK_Click">OK</Button>
+            <Button IsCancel="True" Click="ButtonCancel_Click">Cancel</Button>
+        </StackPanel>
+        </Grid>
+    </StackPanel>
+</Window>

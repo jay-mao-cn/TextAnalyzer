@@ -8,27 +8,36 @@
         CanResize="False" SizeToContent="Height" Width="600" x:DataType="vm:FindVM"
         Title="Find" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
     <StackPanel Margin="12">
-        <DockPanel>
-            <TextBlock DockPanel.Dock="Left" Margin="0,0,6,0"
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Margin="0,0,6,0"
                        VerticalAlignment="Center">Text:</TextBlock>
-            <ComboBox HorizontalAlignment="Stretch"
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
                       ItemsSource="{Binding HistoryTexts}"
                       Text="{Binding TextToFind}"
                       IsEditable="True"/>
-        </DockPanel>
 
-        <StackPanel Orientation="Horizontal">
-            <CheckBox Content="_Case Sensitive"
-                      IsChecked="{Binding IsCaseSensitive}"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                <CheckBox Content="_Case Sensitive"
+                          IsChecked="{Binding IsCaseSensitive}"/>
 
-            <CheckBox Margin="20,0" Content="_Regular Expression"
-                      IsChecked="{Binding IsRegularExpression}"/>
+                <CheckBox Margin="20,0" Content="_Regular Expression"
+                          IsChecked="{Binding IsRegularExpression}"/>
 
-            <CheckBox Content="_Logic Operation"
-                      IsChecked="{Binding IsLogicOperation}"
-                      IsEnabled="{Binding !IsRegularExpression}"
-                      ToolTip.Tip="Can use &amp;&amp; or || logic operations in Text.&#x0a;Note: &#x0a;1. Need to add a space around the &amp;&amp; or ||. &#x0a;2. Can use same operator multiple times but can NOT be mixed."/>
-        </StackPanel>
+                <CheckBox Content="_Logic Operation"
+                          IsChecked="{Binding IsLogicOperation}"
+                          IsEnabled="{Binding !IsRegularExpression}"
+                          ToolTip.Tip="Can use &amp;&amp; or || logic operations in Text.&#x0a;Note: &#x0a;1. Need to add a space around the &amp;&amp; or ||. &#x0a;2. Can use same operator multiple times but can NOT be mixed."/>
+            </StackPanel>
+        </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button IsDefault="True" Margin="8,0" MinWidth="50"

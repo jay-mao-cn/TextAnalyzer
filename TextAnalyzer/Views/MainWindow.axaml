@@ -89,7 +89,7 @@
                     <NativeMenuItem Header="Select All" Gesture="Meta+A"
                                     Command="{Binding SelectAllTextsCommand}"/>
                     <NativeMenuItemSeparator Header="-" />
-                
+
                     <NativeMenuItem Header="Find..." Gesture="Meta+F"
                                     Command="{Binding FindText}"/>
                     <NativeMenuItem Header="Find Previous" Gesture="F2"
@@ -131,6 +131,10 @@
                                             IsChecked="{Binding IsShowMarkers,Converter={StaticResource EqualityCvt},ConverterParameter={x:Null}}"/>
                         </NativeMenu>
                     </NativeMenuItem>
+                    <NativeMenuItemSeparator Header="-" />
+
+                    <NativeMenuItem Header="Chart" Gesture="Meta+T"
+                                    Command="{Binding EditChartCommand}"/>
                     <NativeMenuItemSeparator Header="-" />
 
                     <NativeMenuItem Header="Zoom In" Gesture="Ctrl++"
@@ -270,7 +274,7 @@
                 <MenuItem Header="Select _All" InputGesture="Ctrl+A"
                           Command="{Binding SelectAllTextsCommand}"/>
                 <MenuItem Header="-" />
-                
+
                 <MenuItem Header="_Find..." InputGesture="Ctrl+F"
                           Command="{Binding FindText}"/>
                 <MenuItem Header="Find P_revious" InputGesture="F2"
@@ -306,6 +310,10 @@
                               CommandParameter="{x:Null}"
                               IsChecked="True"/>
                 </MenuItem>
+                <MenuItem Header="-" />
+
+                <MenuItem Header="_Chart" InputGesture="Ctrl+T"
+                          Command="{Binding EditChartCommand}"/>
                 <MenuItem Header="-" />
 
                 <MenuItem x:Name="_ZoomIn" Header="Zoom _In"

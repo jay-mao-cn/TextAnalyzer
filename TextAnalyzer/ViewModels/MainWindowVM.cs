@@ -94,6 +94,7 @@ namespace TextAnalyzer.ViewModels
         public IRelayCommand FindPreviousTextCommand { get; private set; }
         public IRelayCommand FindNextTextCommand { get; private set; }
         public IRelayCommand GoToLineCommand { get; private set; }
+        public IRelayCommand EditChartCommand { get; private set; }
         public IRelayCommand ZoomInCommand { get; private set; }
         public IRelayCommand ZoomOutCommand { get; private set; }
         public IRelayCommand FindPreviousMatchCommand { get; private set; }
@@ -161,6 +162,8 @@ namespace TextAnalyzer.ViewModels
                 () => _textFinder != null);
 
             GoToLineCommand = new RelayCommand(GoToLine, () => _texts.Count > 0);
+
+            EditChartCommand = new RelayCommand(EditChart, () => _allLines.Count > 0);
 
             ZoomInCommand = new RelayCommand(ZoomIn, () => ZoomRatio < MaxZoomRatio);
             ZoomOutCommand = new RelayCommand(ZoomOut, () => ZoomRatio > MinZoomRatio);
@@ -384,8 +387,8 @@ namespace TextAnalyzer.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    await MessageBox(
-                        $"Save failed. Exception: {ex.Message}", Icon.Error);
+                    await MessageBoxHelper.Show(
+                        _topLevel, $"Save failed. Exception: {ex.Message}", Icon.Error);
                 }
             }
         }
@@ -803,6 +806,14 @@ namespace TextAnalyzer.ViewModels
         bool AnyEnabledFilterSelected =>
             FiltersSource.RowSelection!.SelectedItems.Any(flt => flt!.IsEnabled);
 
+        IReadOnlyList<FilePickerFileType>? FilterFileTypeChoices =>
+            [
+                new FilePickerFileType("Filter")
+                {
+                    Patterns = [$"*{FilterFileExtension}"]
+                }
+            ];
+
         void InitFiltersSource()
         {
             var modifierCvt = new ModifierConverter();
@@ -936,12 +947,7 @@ namespace TextAnalyzer.ViewModels
                     new FilePickerOpenOptions()
                     {
                         Title = "Load Filters",
-                        FileTypeFilter = new List<FilePickerFileType>() {
-                        new FilePickerFileType("Filter")
-                        {
-                            Patterns = [$"*{FilterFileExtension}"]
-                        }
-                        },
+                        FileTypeFilter = FilterFileTypeChoices,
                         AllowMultiple = false,
                     });
 
@@ -972,13 +978,7 @@ namespace TextAnalyzer.ViewModels
                 new FilePickerSaveOptions()
                 {
                     Title = "Save Filters",
-                    FileTypeChoices = new List<FilePickerFileType>()
-                    {
-                        new FilePickerFileType("Filter")
-                        {
-                            Patterns = [$"*{FilterFileExtension}"]
-                        }
-                    },
+                    FileTypeChoices = FilterFileTypeChoices,
                     DefaultExtension = FilterFileExtension
                 });
 
@@ -1126,7 +1126,8 @@ namespace TextAnalyzer.ViewModels
             var filters = _persistence.Load<List<FilterModel>>(filePath);
             if (filters == null)
             {
-                await MessageBox($"Failed to load {filePath}", Icon.Error);
+                await MessageBoxHelper.Show(
+                    _topLevel, $"Failed to load {filePath}", Icon.Error);
             }
             else
             {
@@ -1159,8 +1160,8 @@ namespace TextAnalyzer.ViewModels
             }
             catch (Exception ex)
             {
-                await MessageBox(
-                    $"Save filters failed. Exception: ${ex.Message}", Icon.Error);
+                await MessageBoxHelper.Show(
+                    _topLevel, $"Save filters failed. Exception: ${ex.Message}", Icon.Error);
             }
         }
 
@@ -1547,8 +1548,8 @@ namespace TextAnalyzer.ViewModels
             }
             catch (Exception ex)
             {
-                await MessageBox(
-                    $"Paste filters failed. Exception: ${ex.Message}", Icon.Error);
+                await MessageBoxHelper.Show(
+                    _topLevel, $"Paste filters failed. Exception: ${ex.Message}", Icon.Error);
             }
         }
 
@@ -1875,6 +1876,100 @@ namespace TextAnalyzer.ViewModels
 
         #endregion
 
+        #region Chart
+
+        void EditChart()
+        {
+            var vm = new EditChartVM(_topLevel) { EndLine = _originalTexts.Count };
+            var wnd = new EditChartWindow() { DataContext = vm };
+            var owner = _topLevel as Window;
+            Debug.Assert(owner != null);
+            wnd.ShowDialog<bool>(owner).ContinueWith(
+               result =>
+               {
+                   if (!result.Result)
+                       return;
+
+                   DisplayChart(vm);
+               });
+        }
+
+        void DisplayChart(EditChartVM editChartVM)
+        {
+            _dispatcher.BeginInvoke(() =>
+            {
+                List<double> values = [];
+                List<string>? labels = editChartVM.NeedLabel ? [] : null;
+                var filter = new FilterRunner(editChartVM.GetFilter());
+                var key = editChartVM.Key;
+                List<char> endChars = [];
+                if (editChartVM.EndChar == "Space")
+                {
+                    endChars.Add(' ');
+                }
+                else if (editChartVM.EndChar == "EOF")
+                {
+                    endChars.Add('\n');
+                    endChars.Add('\r');
+                }
+                else if (editChartVM.EndChar.Length > 0)
+                {
+                    endChars.Add(editChartVM.EndChar[0]);
+                }
+                var endCharArray = endChars.ToArray();
+                int endLine = (editChartVM.EndLine >= 0) ? editChartVM.EndLine : int.MaxValue;
+
+                foreach (var textLine in _texts)
+                {
+                    if (textLine.LineNumber < editChartVM.StartLine
+                        || textLine.LineNumber > endLine)
+                    {
+                        continue;
+                    }
+
+                    if (filter.Match(textLine.Text, null))
+                    {
+                        var keyPos = textLine.Text.IndexOf(key);
+                        if (keyPos < 0)
+                            continue;
+
+                        var valueStartPos = keyPos + key.Length;
+                        var valueEndPos = textLine.Text.IndexOfAny(endCharArray, valueStartPos);
+                        if (valueEndPos < 0)
+                            continue;
+
+                        try
+                        {
+                            values.Add(Convert.ToDouble(textLine.Text.Substring(
+                                valueStartPos, valueEndPos - valueStartPos)));
+
+                            if (labels != null)
+                            {
+                                labels.Add(textLine.Text.Substring(
+                                    editChartVM.LabelStartPos, editChartVM.LabelLength));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.Message);
+                            continue;
+                        }
+                    }
+                }
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var vm = new DisplayChartVM(editChartVM.Title, values, labels);
+                    var wnd = new DisplayChartWindow() { DataContext = vm };
+                    var owner = _topLevel as Window;
+                    Debug.Assert(owner != null);
+                    wnd.ShowDialog(owner);
+                });
+            });
+        }
+
+        #endregion
+
         #region IDisposable
         public void Dispose()
         {
@@ -1900,7 +1995,7 @@ namespace TextAnalyzer.ViewModels
             sb.AppendLine("- Press \"F5\" to reload the text file.");
             sb.AppendLine("- Save the filter ([Ctrl/Cmd]+Shift+S) for next time use.");
             sb.AppendLine("- Check other usages from app menu or context menu.");
-            await MessageBox(sb.ToString(), Icon.Question);
+            await MessageBoxHelper.Show(_topLevel, sb.ToString(), Icon.Question);
         }
 
         public void ShowAbout()
@@ -1934,20 +2029,5 @@ namespace TextAnalyzer.ViewModels
                 });
             }
         }
-
-        async Task MessageBox(string message, Icon icon = Icon.None)
-        {
-            if (_topLevel is Window window)
-            {
-                await MessageBoxManager.GetMessageBoxStandard(
-                    AppName, message, icon: icon).ShowWindowDialogAsync(window);
-            }
-            else
-            {
-                await MessageBoxManager.GetMessageBoxStandard(
-                    AppName, message, icon: icon).ShowWindowAsync();
-            }
-        }
-
     }
 }
