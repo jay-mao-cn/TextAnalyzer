@@ -178,9 +178,8 @@ namespace TextAnalyzer.ViewModels
         internal void Update(FilterModel model)
         {
             _isEnabled = model.IsEnabled;
-            _fgColor = model.ForegroundColor;
-            _bgColor = model.BackgroundColor;
-
+            ForegroundColor = model.ForegroundColor;
+            BackgroundColor = model.BackgroundColor;
             Description = model.Description;
 
             Modifiers.Clear();
