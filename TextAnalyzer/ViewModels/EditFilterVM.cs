@@ -1,4 +1,6 @@
-﻿using Avalonia.Media;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -15,7 +17,7 @@ namespace TextAnalyzer.ViewModels
         FilterType _selectedFilterType;
 
         [ObservableProperty]
-        Color _selectedTextColor = Colors.Black;
+        Color _selectedTextColor;
 
         [ObservableProperty]
         Color _selectedBackgroundColor = Colors.Transparent;
@@ -71,6 +73,11 @@ namespace TextAnalyzer.ViewModels
                 markers.Add(i);
             }
             Markers = markers;
+
+            object? color = null;
+            var app = Application.Current;
+            if (app?.TryFindResource("ForegroundColor", app.ActualThemeVariant, out color) == true)
+                _selectedTextColor = (Color)color!;
 
             PropertyChanged += (s, e) =>
             {

@@ -19,6 +19,18 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://TextAnalyzer/Assets/SharedTemplates.axaml"/>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key='Light'>
+                            <Color x:Key='ForegroundColor'>Black</Color>
+                            <Color x:Key='ExcludedTextColor'>#6D6D6D</Color>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key='Dark'>
+                            <Color x:Key='ForegroundColor'>White</Color>
+                            <Color x:Key='ExcludedTextColor'>#C0C0C0</Color>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

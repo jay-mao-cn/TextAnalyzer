@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -11,7 +12,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using System;
 using System.Collections.Generic;
@@ -76,6 +76,29 @@ namespace TextAnalyzer.ViewModels
         {
             _topLevel = topLevel;
             _focusMonitor = focusMonitor;
+            _topLevel.PropertyChanged += TopLevel_PropertyChanged;
+            UpdateThemeColors();
+        }
+
+        void TopLevel_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property.Name == nameof(Application.ActualThemeVariant))
+            {
+                UpdateThemeColors();
+                FilterTexts();
+            }
+        }
+
+        void UpdateThemeColors()
+        {
+            object? color = null;
+            if (_topLevel.TryFindResource("ForegroundColor", _topLevel.ActualThemeVariant, out color))
+                _defaultForeground = new SolidColorBrush((Color)color!);
+            Debug.Assert(_defaultForeground != null);
+
+            if (_topLevel.TryFindResource("ExcludedTextColor", _topLevel.ActualThemeVariant, out color))
+                _excludedTextForeground = new SolidColorBrush((Color)color!);
+            Debug.Assert(_excludedTextForeground != null);
         }
 
         #region Commands
@@ -263,7 +286,7 @@ namespace TextAnalyzer.ViewModels
         List<TextLineVM> _allLines = [];
         Dictionary<int, List<int>> _lineMarkers = [];
         IBrush _defaultForeground;
-        IBrush _defaultBackground;
+        IBrush _defaultBackground = Brushes.Transparent;
         IBrush _excludedTextForeground;
 
         string? _currentTextFile = null;
@@ -1716,12 +1739,6 @@ namespace TextAnalyzer.ViewModels
             ZoomRatio = _preferences.ZoomRatio;
             IsShowOnlyFilteredLines = _preferences.IsShowOnlyFilteredLines;
             IsHideEmptyLines = _preferences.IsHideEmptyLines;
-            _defaultForeground = new SolidColorBrush(
-                _preferences.DefaultForegroundColor);
-            _defaultBackground = new SolidColorBrush(
-                _preferences.DefaultBackgroundColor);
-            _excludedTextForeground = new SolidColorBrush(
-                _preferences.DefaultExcludedTextColor);
 
             _recentFilesArchivePath = Path.Combine(appFolder, "RecentFiles");
             _recentFiltersArchivePath = Path.Combine(appFolder, "RecentFilters");

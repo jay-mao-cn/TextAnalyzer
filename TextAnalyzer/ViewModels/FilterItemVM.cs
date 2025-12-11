@@ -128,7 +128,7 @@ namespace TextAnalyzer.ViewModels
                 {
                     _bgColor = value;
                     Background = new SolidColorBrush(value);
-                    OnPropertyChanged(nameof(Background));
+                    OnPropertyChanged(nameof(DisplayBackground));
                 }
             }
         }

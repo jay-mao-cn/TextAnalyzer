@@ -9,8 +9,8 @@
                     Content="X" Foreground="Red" Margin="5,0,-30,0"
                     Command="{Binding RemoveItem}"/>
             <TextBlock VerticalAlignment="Center"
-                        Text="{Binding Name}" ToolTip.Tip="{Binding Name}"
-                        TextTrimming="PrefixCharacterEllipsis"/>
+                       Text="{Binding Name}" ToolTip.Tip="{Binding Name}"
+                       TextTrimming="PrefixCharacterEllipsis"/>
         </DockPanel>
     </DataTemplate>
 
