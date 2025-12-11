@@ -1,5 +1,12 @@
 <h1>About</h1>
-<p>Inspired by TextAnalysisTool.NET, implemented by Avalonia UI to support Windows/Mac/Linux.</p>
+<p>Inspired by TextAnalysisTool.NET, implemented by Avalonia UI to support Windows/Mac/Linux. With some new faatures:</p>
+<ol>
+  <li>Chart viewer</li>
+  <li>Text viewer window which can format json or EoL</li>
+  <li>Filter with logical operations (&& or ||)</li>
+  <li>Hide empty lines</li>
+  <li>OS theme adaptive</li>
+</ol>
 <h1>Build</h1>
 <p>Install dotnet 8.0 SDK.</p>
 <h2>Windows</h2>
