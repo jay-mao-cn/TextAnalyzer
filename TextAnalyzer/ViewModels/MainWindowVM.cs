@@ -490,7 +490,12 @@ namespace TextAnalyzer.ViewModels
                         return;
 
                     _textFinder = new FilterRunner(vm.GetFilter());
-                    Dispatcher.UIThread.Post(() => FindNextText(false));
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        FindNextTextCommand.NotifyCanExecuteChanged();
+                        FindPreviousTextCommand.NotifyCanExecuteChanged();
+                        FindNextText(false);
+                    });
                 });
         }
 
@@ -1294,6 +1299,7 @@ namespace TextAnalyzer.ViewModels
                 }
 
                 RefreshTexts(restoreSelection);
+                EditChartCommand.NotifyCanExecuteChanged();
             });
         }
 

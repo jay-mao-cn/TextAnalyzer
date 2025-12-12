@@ -3,9 +3,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:TextAnalyzer.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="620" d:DesignHeight="250"
+        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="250"
         x:Class="TextAnalyzer.EditChartWindow"
-        CanResize="False" SizeToContent="Height" Width="620" x:DataType="vm:EditChartVM"
+        CanResize="False" SizeToContent="Height" Width="640" x:DataType="vm:EditChartVM"
         Title="Edit Chart" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
     <Window.Styles>
         <Style Selector="TextBlock.caption">
