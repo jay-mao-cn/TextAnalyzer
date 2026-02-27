@@ -1299,7 +1299,10 @@ namespace TextAnalyzer.ViewModels
                 }
 
                 RefreshTexts(restoreSelection);
-                EditChartCommand.NotifyCanExecuteChanged();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    EditChartCommand.NotifyCanExecuteChanged();
+                });
             });
         }
 
@@ -1356,46 +1359,46 @@ namespace TextAnalyzer.ViewModels
                 var nextLineNum = filter.FindNextLineNumber(curLineNum, backward);
                 if (IsShowOnlyFilteredLines || IsHideEmptyLines)
                 {
-                    while (true)
+                    for (int counter = 0; counter < filter.Hits; ++counter)
                     {
-                        if (nextLineNum == curLineNum)
-                            break;
-
-                        bool foundNextLine = false;
-                        for (int i = 1; i <= rowsCnt; ++i)
+                        if (!_allLines[nextLineNum - 1].IsExcluded)
                         {
-                            var idx = curSelIdx + i;
-                            if (backward)
+                            bool foundNextLine = false;
+                            for (int i = 1; i <= rowsCnt; ++i)
                             {
-                                idx = curSelIdx - i;
-                                if (idx < 0)
-                                    idx += rowsCnt;
-                            }
-                            else
-                            {
-                                if (idx >= rowsCnt)
-                                    idx -= rowsCnt;
-                            }
+                                var idx = curSelIdx + i;
+                                if (backward)
+                                {
+                                    idx = curSelIdx - i;
+                                    if (idx < 0)
+                                        idx += rowsCnt;
+                                }
+                                else
+                                {
+                                    if (idx >= rowsCnt)
+                                        idx -= rowsCnt;
+                                }
 
-                            var row = TextsSource.Rows[idx].Model as TextLineVM;
-                            Debug.Assert(row != null);
-                            if (row.LineNumber == nextLineNum)
-                            {
-                                if (IsShowOnlyFilteredLines && row.IsExcluded)
+                                var row = TextsSource.Rows[idx].Model as TextLineVM;
+                                Debug.Assert(row != null);
+                                if (row.LineNumber == nextLineNum)
+                                {
+                                    if (IsShowOnlyFilteredLines && row.IsExcluded)
+                                        break;
+
+                                    if (IsHideEmptyLines && row.Text.Length == 0)
+                                        break;
+
+                                    textsSelRow.Clear();
+                                    textsSelRow.Select(idx);
+                                    foundNextLine = true;
                                     break;
+                                }
+                            }
 
-                                if (IsHideEmptyLines && row.Text.Length == 0)
-                                    break;
-
-                                textsSelRow.Clear();
-                                textsSelRow.Select(idx);
-                                foundNextLine = true;
+                            if (foundNextLine)
                                 break;
-                            }
                         }
-
-                        if (foundNextLine)
-                            break;
 
                         nextLineNum = filter.FindNextLineNumber(nextLineNum, backward);
                     }
